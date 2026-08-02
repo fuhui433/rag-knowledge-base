@@ -9,24 +9,19 @@ import streamlit as st
 
 # ===== Streamlit Cloud 密钥配置 =====
 import os as _os
-_api_ok = False
 try:
     _api_key = st.secrets.get("DASHSCOPE_API_KEY", "")
     if _api_key:
         _os.environ["DASHSCOPE_API_KEY"] = _api_key
-        _api_ok = True
 except Exception:
-    pass
-if not _api_ok:
     _api_key = _os.environ.get("DASHSCOPE_API_KEY", "")
+    if not _api_key:
+        _api_key = ""
 
-# 调试：在页面边缘显示 Key 加载状态
-st.markdown(
-    f'<div style="position:fixed;bottom:5px;right:5px;font-size:10px;color:gray;">'
-    f'Key: {"loaded" if _api_key else "NOT FOUND"} (len={len(_api_key) if _api_key else 0})'
-    f'</div>',
-    unsafe_allow_html=True,
-)
+# 在侧边栏顶部显示 Key 状态
+with st.sidebar:
+    st.text(f"API Key: {'LOADED' if _api_key else 'MISSING'}")
+    st.text(f"Key preview: {_api_key[:15] if _api_key else 'N/A'}...")
 
 import uuid
 from datetime import datetime
