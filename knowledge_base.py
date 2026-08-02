@@ -52,15 +52,14 @@ class KnowledgeBaseService(object):
 
         )
 
-    def upload_by_file(self,data, filename):
+    def upload_by_file(self, data, filename):
         md5_hex = get_string_md5(data)
         if check_md5(md5_hex):
-            return"[跳过]内容已经存在知识库中"
+            return "[跳过]内容已经存在知识库中"
 
-        if len( data)> config.max_split_char_mumber:
-            knowledge_chunks: list[ str] =self.splitter.split_text(data)
-
-        else :
+        if len(data) > config.max_split_char_mumber:
+            knowledge_chunks: list[str] = self.splitter.split_text(data)
+        else:
             knowledge_chunks = [data]
 
         metadata = {"source": filename,
@@ -68,12 +67,9 @@ class KnowledgeBaseService(object):
                      "operator": "小"
                     }
 
-
-
         self.chroma.add_texts(
             knowledge_chunks,
             metadatas=[metadata for _ in knowledge_chunks],
-
         )
         save_md5(md5_hex)
         return f"[成功]上传文件 {filename} 到知识库中"
