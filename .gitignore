@@ -1,0 +1,28 @@
+# 敏感文件和本地数据
+.env
+*.env
+
+# ChromaDB 本地向量数据库
+chroma_db/
+
+# 聊天历史记录
+chat_history/
+
+# MD5 去重记录
+md5.text
+
+# Python
+__pycache__/
+*.pyc
+*.py[cod]
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 操作系统
+.DS_Store
+Thumbs.db
