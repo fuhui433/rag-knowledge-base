@@ -19,6 +19,13 @@ try:
 except Exception:
     pass
 
+# ===== 调试：显示 Key 状态 =====
+if _api_key:
+    st.success(f"Key OK, preview: {_api_key[:8]}...")
+else:
+    st.error("Key MISSING - check Secrets in Manage app")
+    st.stop()
+
 import uuid
 from datetime import datetime
 
