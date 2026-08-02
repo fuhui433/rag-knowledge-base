@@ -7,6 +7,17 @@ RAG 知识库管理系统 - 主入口
 import os
 import streamlit as st
 
+import uuid
+from datetime import datetime
+
+# ===== 页面配置（必须是第一个 Streamlit 调用）=====
+st.set_page_config(
+    page_title="RAG 知识库管理系统",
+    page_icon="📚",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
 # ===== Streamlit Cloud 密钥配置（两个 Key）=====
 import os as _os
 _embedding_key = ""
@@ -21,17 +32,6 @@ try:
 except Exception:
     _embedding_key = _os.environ.get("DASHSCOPE_API_KEY", "")
     _chat_key = _os.environ.get("DASHSCOPE_CHAT_KEY", _embedding_key)
-
-import uuid
-from datetime import datetime
-
-# ===== 页面配置（必须是第一个 Streamlit 调用）=====
-st.set_page_config(
-    page_title="RAG 知识库管理系统",
-    page_icon="📚",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
 
 import config
 from rag import RagService
