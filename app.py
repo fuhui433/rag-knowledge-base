@@ -19,13 +19,6 @@ try:
 except Exception:
     pass
 
-# ===== 调试：显示 Key 状态 =====
-if _api_key:
-    st.success(f"Key OK, preview: {_api_key[:8]}...")
-else:
-    st.error("Key MISSING - check Secrets in Manage app")
-    st.stop()
-
 import uuid
 from datetime import datetime
 
@@ -93,6 +86,8 @@ with st.sidebar:
     st.title("📚 RAG 知识库系统")
     st.caption("基于 RAG 的智能知识管理平台")
 
+    st.divider()
+    st.caption(f"Key: {'LOADED' if _api_key else 'MISSING'}")
     st.divider()
     st.subheader("🧭 导航")
 
