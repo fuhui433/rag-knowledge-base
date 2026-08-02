@@ -7,15 +7,18 @@ RAG 知识库管理系统 - 主入口
 import os
 import streamlit as st
 
-# ===== Streamlit Cloud 密钥配置（优先于本地环境变量）=====
+# ===== Streamlit Cloud 密钥配置 =====
 import os as _os
+_api_ok = False
 try:
-    _api_key = st.secrets["DASHSCOPE_API_KEY"]
+    _api_key = st.secrets.get("DASHSCOPE_API_KEY", "")
+    if _api_key:
+        _os.environ["DASHSCOPE_API_KEY"] = _api_key
+        _api_ok = True
 except Exception:
+    pass
+if not _api_ok:
     _api_key = _os.environ.get("DASHSCOPE_API_KEY", "")
-
-# 同时设置到环境变量，确保下游库能读到
-_os.environ["DASHSCOPE_API_KEY"] = _api_key
 
 import uuid
 from datetime import datetime

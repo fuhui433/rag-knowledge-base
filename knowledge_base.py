@@ -46,7 +46,10 @@ class KnowledgeBaseService(object):
 
         self.chroma = Chroma(
             collection_name=config.collections_name,
-            embedding_function=DashScopeEmbeddings(model="text-embedding-v4"),
+            embedding_function=DashScopeEmbeddings(
+                model="text-embedding-v4",
+                dashscope_api_key=os.environ.get("DASHSCOPE_API_KEY", ""),
+            ),
             persist_directory=config.persist_directory,
         )
         self.splitter = RecursiveCharacterTextSplitter(
