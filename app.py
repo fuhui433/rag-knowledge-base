@@ -22,15 +22,9 @@ except Exception:
     _embedding_key = _os.environ.get("DASHSCOPE_API_KEY", "")
     _chat_key = _os.environ.get("DASHSCOPE_CHAT_KEY", _embedding_key)
 
-# 调试
-import sys
-st.write(f"embed_key={bool(_embedding_key)} chat_key={bool(_chat_key)}")
-st.write(f"secrets_ok={bool(st.secrets.get('DASHSCOPE_API_KEY', ''))}")
-
-# 调试
-import sys
-st.write(f"embed_key={bool(_embedding_key)} chat_key={bool(_chat_key)}")
-st.write(f"secrets_ok={bool(st.secrets.get('DASHSCOPE_API_KEY', ''))}")
+# 调试用 - 确认 Key 加载状态
+st.write(f"DEBUG: all_secrets={list(st.secrets.keys())}")
+st.write(f"DEBUG: embed={bool(_embedding_key)} chat={bool(_chat_key)}")
 
 import uuid
 from datetime import datetime
