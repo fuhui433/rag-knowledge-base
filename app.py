@@ -15,14 +15,17 @@ try:
     _embedding_key = st.secrets.get("DASHSCOPE_API_KEY", "")
     _chat_key = st.secrets.get("DASHSCOPE_CHAT_KEY", "")
     if not _chat_key:
-        _chat_key = _embedding_key  # 如果没单独配对话 Key，复用同一个
-    if _embedding_key:
-        _os.environ["DASHSCOPE_API_KEY"] = _embedding_key
-    if _chat_key:
-        _os.environ["DASHSCOPE_CHAT_KEY"] = _chat_key
+        _chat_key = _embedding_key
+    _os.environ["DASHSCOPE_API_KEY"] = _embedding_key
+    _os.environ["DASHSCOPE_CHAT_KEY"] = _chat_key
 except Exception:
     _embedding_key = _os.environ.get("DASHSCOPE_API_KEY", "")
     _chat_key = _os.environ.get("DASHSCOPE_CHAT_KEY", _embedding_key)
+
+# 调试
+import sys
+st.write(f"embed_key={bool(_embedding_key)} chat_key={bool(_chat_key)}")
+st.write(f"secrets_ok={bool(st.secrets.get('DASHSCOPE_API_KEY', ''))}")
 
 import uuid
 from datetime import datetime
