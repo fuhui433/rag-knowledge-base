@@ -27,6 +27,11 @@ import sys
 st.write(f"embed_key={bool(_embedding_key)} chat_key={bool(_chat_key)}")
 st.write(f"secrets_ok={bool(st.secrets.get('DASHSCOPE_API_KEY', ''))}")
 
+# 调试
+import sys
+st.write(f"embed_key={bool(_embedding_key)} chat_key={bool(_chat_key)}")
+st.write(f"secrets_ok={bool(st.secrets.get('DASHSCOPE_API_KEY', ''))}")
+
 import uuid
 from datetime import datetime
 
