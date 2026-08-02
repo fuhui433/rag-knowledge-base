@@ -20,6 +20,14 @@ except Exception:
 if not _api_ok:
     _api_key = _os.environ.get("DASHSCOPE_API_KEY", "")
 
+# 调试：在页面边缘显示 Key 加载状态
+st.markdown(
+    f'<div style="position:fixed;bottom:5px;right:5px;font-size:10px;color:gray;">'
+    f'Key: {"loaded" if _api_key else "NOT FOUND"} (len={len(_api_key) if _api_key else 0})'
+    f'</div>',
+    unsafe_allow_html=True,
+)
+
 import uuid
 from datetime import datetime
 
