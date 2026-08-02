@@ -4,55 +4,19 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough, RunnableWithMessageHistory, RunnableLambda
 from file_history_store import get_history
 from vector_stores import VectorStoreService
+from langchain_community.embeddings import DashScopeEmbeddings
 import config
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_community.chat_models.tongyi import ChatTongyi
-import dashscope
-
-
-class DashScopeEmbedding:
-    """直接用 dashscope SDK 调用，绕过 langchain 的编码问题"""
-    def __init__(self, model="text-embedding-v4"):
-        self.model = model
-
-    def embed_documents(self, texts):
-        all_embeddings = []
-        batch_size = 10
-        for i in range(0, len(texts), batch_size):
-            batch = texts[i:i+batch_size]
-            try:
-                resp = dashscope.TextEmbedding.call(
-                    model=self.model,
-                    input=batch
-                )
-                if resp.status_code == 200:
-                    for item in resp.output["embeddings"]:
-                        all_embeddings.append(item["embedding"])
-                else:
-                    raise Exception(f"API error: {resp.code} - {resp.message}")
-            except Exception as e:
-                raise Exception(f"Embedding failed: {str(e)}")
-        return all_embeddings
-
-    def embed_query(self, text):
-        resp = dashscope.TextEmbedding.call(
-            model=self.model,
-            input=[text]
-        )
-        if resp.status_code == 200:
-            return resp.output["embeddings"][0]["embedding"]
-        else:
-            raise Exception(f"Embedding query failed: {resp.code} - {resp.message}")
-
 
 class RagService(object):
     def __init__(self):
-        _key = os.environ.get("DASHSCOPE_API_KEY", "")
-        if _key:
-            dashscope.api_key = _key
 
         self.vector_service = VectorStoreService(
-            embedding=DashScopeEmbedding(model=config.embedding_model_name)
+            embedding=DashScopeEmbeddings(
+                model=config.embedding_model_name,
+                dashscope_api_key=os.environ.get("DASHSCOPE_API_KEY", ""),
+            )
         )
 
         self.prompt_template = ChatPromptTemplate.from_messages(
