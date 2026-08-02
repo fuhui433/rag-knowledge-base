@@ -74,8 +74,6 @@ class KnowledgeBaseService(object):
                 metadatas=[metadata for _ in knowledge_chunks],
             )
         except Exception as e:
-            import traceback
-            error_detail = f"{type(e).__name__}: {str(e)}"
             # 如果是 DashScope 错误，提取关键信息
             if "status_code" in str(e) or "code" in str(e):
                 import re

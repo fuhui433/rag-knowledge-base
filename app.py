@@ -33,12 +33,6 @@ except Exception:
     _embedding_key = _os.environ.get("DASHSCOPE_API_KEY", "")
     _chat_key = _os.environ.get("DASHSCOPE_CHAT_KEY", _embedding_key)
 
-# 打印 key 状态（调试用，可删除）
-if _embedding_key:
-    st.success(f"Key loaded (len={len(_embedding_key)})")
-else:
-    st.error("Key not found! Check Manage app -> Secrets")
-
 import config
 from rag import RagService
 from knowledge_base import KnowledgeBaseService
@@ -283,10 +277,6 @@ elif _current == "admin" and _admin_logged:
                 st.text(text[:preview_len] + ("\n..." if len(text) > preview_len else ""))
 
             with st.status("正在载入知识库...", expanded=True) as status:
-                # 调试：检查 key 状态
-                import os as _check_os
-                key_status = f"env_key={'FOUND' if _check_os.environ.get('DASHSCOPE_API_KEY') else 'MISSING'}"
-                st.caption(f"Key state: {key_status}")
                 result = st.session_state["server"].upload_by_file(text, file_name)
                 status.update(label="载入完成!", state="complete", expanded=False)
 
