@@ -161,7 +161,7 @@ class KnowledgeBaseService(object):
             return 0
 
         ids_to_delete = []
-        for idx, meta in enumerate(collection["metadatas"]:
+        for idx, meta in enumerate(collection["metadatas"]):
             if meta.get("source") == source:
                 ids_to_delete.append(collection["ids"][idx])
 
