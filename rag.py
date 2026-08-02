@@ -9,15 +9,6 @@ import config
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_community.chat_models.tongyi import ChatTongyi
 
-# Streamlit Cloud Secrets 支持：尝试读取 secrets，失败则用环境变量
-try:
-    import streamlit as _st
-    _key = _st.secrets.get("DASHSCOPE_API_KEY", "")
-    if _key:
-        os.environ["DASHSCOPE_API_KEY"] = _key
-except Exception:
-    pass
-
 class RagService(object):
     def __init__(self):
 

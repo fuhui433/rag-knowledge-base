@@ -6,15 +6,6 @@ from langchain_community.embeddings import DashScopeEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from datetime import datetime
 
-# Streamlit Cloud Secrets 支持
-try:
-    import streamlit as _st
-    _key = _st.secrets.get("DASHSCOPE_API_KEY", "")
-    if _key:
-        os.environ["DASHSCOPE_API_KEY"] = _key
-except Exception:
-    pass
-
 
 def check_md5(md5_str: str):
     if not os.path.exists(config.md5path):
