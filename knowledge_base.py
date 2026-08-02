@@ -35,14 +35,9 @@ class KnowledgeBaseService(object):
     def __init__(self):
         os.makedirs(config.persist_directory, exist_ok=True)
 
-        _api_key = os.environ.get("DASHSCOPE_API_KEY", "")
-
         self.chroma = Chroma(
             collection_name=config.collections_name,
-            embedding_function=DashScopeEmbeddings(
-                model="text-embedding-v4",
-                dashscope_api_key=_api_key,
-            ),
+            embedding_function=DashScopeEmbeddings(model="text-embedding-v4"),
             persist_directory=config.persist_directory,
         )
         self.splitter = RecursiveCharacterTextSplitter(

@@ -9,17 +9,11 @@ import config
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_community.chat_models.tongyi import ChatTongyi
 
-# 从环境变量或 local/toml secrets 中读取 API Key
-_dashscope_key = os.environ.get("DASHSCOPE_API_KEY", "")
-
 class RagService(object):
     def __init__(self):
 
         self.vector_service = VectorStoreService(
-            embedding=DashScopeEmbeddings(
-                model=config.embedding_model_name,
-                dashscope_api_key=_dashscope_key,
-            )
+            embedding=DashScopeEmbeddings(model=config.embedding_model_name)
         )
 
         self.prompt_template = ChatPromptTemplate.from_messages(
@@ -32,11 +26,7 @@ class RagService(object):
             ]
         )
 
-        self.chat_model = ChatTongyi(
-            model=config.chat_model_name,
-            streaming=True,
-            dashscope_api_key=_dashscope_key,
-        )
+        self.chat_model = ChatTongyi(model=config.chat_model_name, streaming=True)
 
         self.chain = self.__get_chain()
 
