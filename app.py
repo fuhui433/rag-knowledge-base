@@ -277,6 +277,10 @@ elif _current == "admin" and _admin_logged:
                 st.text(text[:preview_len] + ("\n..." if len(text) > preview_len else ""))
 
             with st.status("正在载入知识库...", expanded=True) as status:
+                # 调试：检查 key 状态
+                import os as _check_os
+                key_status = f"env_key={'FOUND' if _check_os.environ.get('DASHSCOPE_API_KEY') else 'MISSING'}"
+                st.caption(f"Key state: {key_status}")
                 result = st.session_state["server"].upload_by_file(text, file_name)
                 status.update(label="载入完成!", state="complete", expanded=False)
 
