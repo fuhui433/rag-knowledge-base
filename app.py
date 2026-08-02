@@ -11,13 +11,12 @@ import streamlit as st
 import os as _os
 _api_key = ""
 try:
-    _api_key = _os.environ.get("DASHSCOPE_API_KEY", "")
-    if not _api_key:
-        _api_key = st.secrets.get("DASHSCOPE_API_KEY", "")
-        if _api_key:
-            _os.environ["DASHSCOPE_API_KEY"] = _api_key
+    # 先尝试 Streamlit secrets，再 fallback 到环境变量
+    _api_key = st.secrets.get("DASHSCOPE_API_KEY", "")
+    if _api_key:
+        _os.environ["DASHSCOPE_API_KEY"] = _api_key
 except Exception:
-    pass
+    _api_key = _os.environ.get("DASHSCOPE_API_KEY", "")
 
 import uuid
 from datetime import datetime
