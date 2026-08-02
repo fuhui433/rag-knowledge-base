@@ -8,13 +8,14 @@ import os
 import streamlit as st
 
 # ===== Streamlit Cloud 密钥配置（优先于本地环境变量）=====
-# 在 Streamlit Cloud 中通过 st.secrets 注入密钥，不必写进代码
+import os as _os
 try:
-    dashscope_key = st.secrets["DASHSCOPE_API_KEY"]
-    os.environ["DASHSCOPE_API_KEY"] = dashscope_key
+    _api_key = st.secrets["DASHSCOPE_API_KEY"]
 except Exception:
-    # 本地开发时使用系统环境变量
-    pass
+    _api_key = _os.environ.get("DASHSCOPE_API_KEY", "")
+
+# 同时设置到环境变量，确保下游库能读到
+_os.environ["DASHSCOPE_API_KEY"] = _api_key
 
 import uuid
 from datetime import datetime
