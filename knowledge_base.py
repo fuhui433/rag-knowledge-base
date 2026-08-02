@@ -67,10 +67,23 @@ class KnowledgeBaseService(object):
                      "operator": "小"
                     }
 
-        self.chroma.add_texts(
-            knowledge_chunks,
-            metadatas=[metadata for _ in knowledge_chunks],
-        )
+        # 详细错误捕获
+        try:
+            self.chroma.add_texts(
+                knowledge_chunks,
+                metadatas=[metadata for _ in knowledge_chunks],
+            )
+        except Exception as e:
+            import traceback
+            error_detail = f"{type(e).__name__}: {str(e)}"
+            # 如果是 DashScope 错误，提取关键信息
+            if "status_code" in str(e) or "code" in str(e):
+                import re
+                match = re.search(r'status_code:\s*(\d+)', str(e))
+                if match:
+                    status_code = match.group(1)
+                    return f"[错误] API 返回状态码 {status_code}，请检查 API Key 是否正确"
+            raise
         save_md5(md5_hex)
         return f"[成功]上传文件 {filename} 到知识库中"
 
