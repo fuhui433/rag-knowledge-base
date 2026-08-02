@@ -35,11 +35,12 @@ class KnowledgeBaseService(object):
     def __init__(self):
         os.makedirs(config.persist_directory, exist_ok=True)
 
+        _key = os.environ.get("DASHSCOPE_API_KEY", "")
         self.chroma = Chroma(
             collection_name=config.collections_name,
             embedding_function=DashScopeEmbeddings(
                 model="text-embedding-v4",
-                dashscope_api_key=os.environ.get("DASHSCOPE_API_KEY", ""),
+                dashscope_api_key=_key,
             ),
             persist_directory=config.persist_directory,
         )
