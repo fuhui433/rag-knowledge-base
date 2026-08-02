@@ -26,6 +26,10 @@ except Exception:
 st.write(f"DEBUG: all_secrets={list(st.secrets.keys())}")
 st.write(f"DEBUG: embed={bool(_embedding_key)} chat={bool(_chat_key)}")
 
+# 调试用 - 确认 Key 加载状态
+st.write(f"DEBUG: all_secrets={list(st.secrets.keys())}")
+st.write(f"DEBUG: embed={bool(_embedding_key)} chat={bool(_chat_key)}")
+
 import uuid
 from datetime import datetime
 
