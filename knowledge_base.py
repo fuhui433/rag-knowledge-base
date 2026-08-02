@@ -2,21 +2,22 @@ import os
 import config
 import hashlib
 from langchain_chroma import Chroma
-from langchain_community.embeddings import DashScopeEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from datetime import datetime
+import dashscope
+from dashscope import TextEmbedding
 
 
 def check_md5(md5_str: str):
     if not os.path.exists(config.md5path):
         open(config.md5path, "w", encoding="utf-8").close()
         return False
-    else :
+    else:
         for line in open(config.md5path, "r", encoding="utf-8").readlines():
             line = line.strip()
             if line == md5_str:
                 return True
-        return  False
+        return False
 
 
 
@@ -31,17 +32,56 @@ def get_string_md5(input_str: str, encoding="utf-8"):
     return md5_obj.hexdigest()
 
 
+class DashScopeEmbedding:
+    """直接用 dashscope SDK 调用，绕过 langchain 的编码问题"""
+    def __init__(self, model="text-embedding-v4"):
+        self.model = model
+
+    def embed_documents(self, texts):
+        """批量生成 embeddings"""
+        all_embeddings = []
+        # dashscope 批量限制
+        batch_size = 10
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i+batch_size]
+            try:
+                resp = TextEmbedding.call(
+                    model=self.model,
+                    input=batch
+                )
+                if resp.status_code == 200:
+                    for item in resp.output["embeddings"]:
+                        all_embeddings.append(item["embedding"])
+                else:
+                    raise Exception(f"API error: {resp.code} - {resp.message}")
+            except Exception as e:
+                raise Exception(f"Embedding failed: {str(e)}")
+        return all_embeddings
+
+    def embed_query(self, text):
+        """生成单个 query 的 embedding"""
+        resp = TextEmbedding.call(
+            model=self.model,
+            input=[text]
+        )
+        if resp.status_code == 200:
+            return resp.output["embeddings"][0]["embedding"]
+        else:
+            raise Exception(f"Embedding query failed: {resp.code} - {resp.message}")
+
+
 class KnowledgeBaseService(object):
     def __init__(self):
         os.makedirs(config.persist_directory, exist_ok=True)
 
         _key = os.environ.get("DASHSCOPE_API_KEY", "")
+        if _key:
+            dashscope.api_key = _key
+
+        embedding = DashScopeEmbedding(model="text-embedding-v4")
         self.chroma = Chroma(
             collection_name=config.collections_name,
-            embedding_function=DashScopeEmbeddings(
-                model="text-embedding-v4",
-                dashscope_api_key=_key,
-            ),
+            embedding_function=embedding,
             persist_directory=config.persist_directory,
         )
         self.splitter = RecursiveCharacterTextSplitter(
@@ -67,23 +107,10 @@ class KnowledgeBaseService(object):
                      "operator": "小"
                     }
 
-        # 详细错误捕获
-        try:
-            self.chroma.add_texts(
-                knowledge_chunks,
-                metadatas=[metadata for _ in knowledge_chunks],
-            )
-        except Exception as e:
-            import traceback
-            error_detail = f"{type(e).__name__}: {str(e)}"
-            # 如果是 DashScope 错误，提取关键信息
-            if "status_code" in str(e) or "code" in str(e):
-                import re
-                match = re.search(r'status_code:\s*(\d+)', str(e))
-                if match:
-                    status_code = match.group(1)
-                    return f"[错误] API 返回状态码 {status_code}，请检查 API Key 是否正确"
-            raise
+        self.chroma.add_texts(
+            knowledge_chunks,
+            metadatas=[metadata for _ in knowledge_chunks],
+        )
         save_md5(md5_hex)
         return f"[成功]上传文件 {filename} 到知识库中"
 
@@ -134,7 +161,7 @@ class KnowledgeBaseService(object):
             return 0
 
         ids_to_delete = []
-        for idx, meta in enumerate(collection["metadatas"]):
+        for idx, meta in enumerate(collection["metadatas"]:
             if meta.get("source") == source:
                 ids_to_delete.append(collection["ids"][idx])
 
@@ -150,4 +177,3 @@ class KnowledgeBaseService(object):
             self.chroma.delete(ids=collection["ids"])
             open(config.md5path, "w", encoding="utf-8").close()
         return total
-
