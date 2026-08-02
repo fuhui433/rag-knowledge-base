@@ -38,10 +38,11 @@ class RagService(object):
             ]
         )
 
+        _chat_api_key = os.environ.get("DASHSCOPE_CHAT_KEY", os.environ.get("DASHSCOPE_API_KEY", ""))
         self.chat_model = ChatTongyi(
             model=config.chat_model_name,
             streaming=True,
-            dashscope_api_key=os.environ.get("DASHSCOPE_API_KEY", ""),
+            dashscope_api_key=_chat_api_key,
         )
 
         self.chain = self.__get_chain()

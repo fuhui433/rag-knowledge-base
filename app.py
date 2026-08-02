@@ -7,16 +7,22 @@ RAG 知识库管理系统 - 主入口
 import os
 import streamlit as st
 
-# ===== Streamlit Cloud 密钥配置 =====
+# ===== Streamlit Cloud 密钥配置（两个 Key）=====
 import os as _os
-_api_key = ""
+_embedding_key = ""
+_chat_key = ""
 try:
-    # 先尝试 Streamlit secrets，再 fallback 到环境变量
-    _api_key = st.secrets.get("DASHSCOPE_API_KEY", "")
-    if _api_key:
-        _os.environ["DASHSCOPE_API_KEY"] = _api_key
+    _embedding_key = st.secrets.get("DASHSCOPE_API_KEY", "")
+    _chat_key = st.secrets.get("DASHSCOPE_CHAT_KEY", "")
+    if not _chat_key:
+        _chat_key = _embedding_key  # 如果没单独配对话 Key，复用同一个
+    if _embedding_key:
+        _os.environ["DASHSCOPE_API_KEY"] = _embedding_key
+    if _chat_key:
+        _os.environ["DASHSCOPE_CHAT_KEY"] = _chat_key
 except Exception:
-    _api_key = _os.environ.get("DASHSCOPE_API_KEY", "")
+    _embedding_key = _os.environ.get("DASHSCOPE_API_KEY", "")
+    _chat_key = _os.environ.get("DASHSCOPE_CHAT_KEY", _embedding_key)
 
 import uuid
 from datetime import datetime
@@ -86,7 +92,7 @@ with st.sidebar:
     st.caption("基于 RAG 的智能知识管理平台")
 
     st.divider()
-    st.caption(f"Key: {'LOADED' if _api_key else 'MISSING'}")
+    st.caption(f"Embed: {'OK' if _embedding_key else 'NO'} | Chat: {'OK' if _chat_key else 'NO'}")
     st.divider()
     st.subheader("🧭 导航")
 
