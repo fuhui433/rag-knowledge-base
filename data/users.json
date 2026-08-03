@@ -1,0 +1,12 @@
+{
+  "testuser1": {
+    "password_hash": "70317122ef811f3c5e489ea411f4d6eb17cdc266634f2477d41fd8b9de245032",
+    "salt": "874267b4c7b0957d",
+    "created_at": "2026-08-03 08:09:47"
+  },
+  "testuser2": {
+    "password_hash": "30504cd903e99610f797cf51779867efce9b06b75e6aec6f3116830c42519939",
+    "salt": "5ff68f1864ef4b67",
+    "created_at": "2026-08-03 08:09:47"
+  }
+}

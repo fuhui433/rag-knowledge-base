@@ -13,7 +13,7 @@ def check_login(username: str, password: str) -> bool:
 
 def login_required():
     """
-    装饰器 / 入口检查：验证当前会话是否已通过管理员登录。
+    验证当前会话是否已通过管理员登录。
     如未登录，显示登录页面并阻止后续操作。
     返回 True 表示已登录，False 表示未登录。
     """

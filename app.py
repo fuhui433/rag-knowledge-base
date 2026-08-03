@@ -1,14 +1,12 @@
-
 """
 RAG 知识库管理系统 - 主入口
-包含：导航、登录验证、知识问答（公开）、后台管理（需登录）
+包含：用户注册/登录、知识问答（需登录）、后台管理（管理员登录）
 """
 
 import os
-import streamlit as st
-
 import uuid
 from datetime import datetime
+import streamlit as st
 
 # ===== 页面配置（必须是第一个 Streamlit 调用）=====
 st.set_page_config(
@@ -37,34 +35,27 @@ import config
 from rag import RagService
 from knowledge_base import KnowledgeBaseService
 from services.auth import check_login
+from services.users import register, login, get_user_history_dir
 from services.file_parser import FileParser
 
 # ===== 会话状态初始化 =====
 if "admin_logged_in" not in st.session_state:
     st.session_state["admin_logged_in"] = False
 
+if "user_logged_in" not in st.session_state:
+    st.session_state["user_logged_in"] = False
+
+if "current_user" not in st.session_state:
+    st.session_state["current_user"] = None
+
 if "current_page" not in st.session_state:
-    st.session_state["current_page"] = "qa"
+    st.session_state["current_page"] = "login"
 
 if "rag" not in st.session_state:
     st.session_state["rag"] = RagService()
 
-if "session_id" not in st.session_state:
-    st.session_state["session_id"] = str(uuid.uuid4())[:8]
-
-if "qa_messages" not in st.session_state:
-    st.session_state["qa_messages"] = [
-        {"role": "assistant", "content": "欢迎来到智能客服系统，请输入您的问题。"}
-    ]
-
 if "server" not in st.session_state:
     st.session_state["server"] = KnowledgeBaseService()
-
-if "upload_history" not in st.session_state:
-    st.session_state["upload_history"] = []
-
-if "confirm_clear_all" not in st.session_state:
-    st.session_state["confirm_clear_all"] = False
 
 
 # ===== 工具函数 =====
@@ -75,11 +66,11 @@ def capture(generator, cache_list):
         yield chunk
 
 
-def get_session_config():
+def get_session_config(username: str) -> dict:
     """动态构建会话配置"""
     return {
         "configurable": {
-            "session_id": st.session_state["session_id"]
+            "session_id": f"user:{username}"
         }
     }
 
@@ -90,48 +81,118 @@ with st.sidebar:
     st.caption("基于 RAG 的智能知识管理平台")
 
     st.divider()
-    st.caption(f"Embed: {'OK' if _embedding_key else 'NO'} | Chat: {'OK' if _chat_key else 'NO'}")
+
+    # 用户登录状态
+    if st.session_state["user_logged_in"] and st.session_state["current_user"]:
+        st.success(f"👤 {st.session_state['current_user']}")
+        if st.button("🚪 退出登录", use_container_width=True):
+            st.session_state["user_logged_in"] = False
+            st.session_state["current_user"] = None
+            st.session_state["current_page"] = "login"
+            st.session_state.pop("qa_messages", None)
+            st.toast("已退出登录")
+            st.rerun()
+    else:
+        st.info("请先登录")
+
     st.divider()
     st.subheader("🧭 导航")
 
     # 智能问答按钮
     qa_label = "💬 智能问答"
-    if st.button(qa_label, use_container_width=True):
+    if st.button(qa_label, use_container_width=True, disabled=not st.session_state["user_logged_in"]):
         st.session_state["current_page"] = "qa"
         st.rerun()
 
-    # 后台管理按钮
-    admin_label = "🔒 后台管理"
-    if st.button(admin_label, use_container_width=True):
-        st.session_state["current_page"] = "admin"
-        st.rerun()
-
-    st.divider()
-
-    # 登录状态显示
+    # 后台管理按钮（仅管理员可见）
     if st.session_state["admin_logged_in"]:
-        st.success("管理员已登录")
-        if st.button("🚪 退出登录", use_container_width=True):
-            st.session_state["admin_logged_in"] = False
-            st.session_state["current_page"] = "qa"
-            st.toast("已退出登录")
+        admin_label = "🔒 后台管理"
+        if st.button(admin_label, use_container_width=True):
+            st.session_state["current_page"] = "admin"
             st.rerun()
-    else:
-        st.info("管理员未登录")
 
     st.divider()
-    st.caption("v2.0 · 2026")
+    st.caption(f"Embed: {'OK' if _embedding_key else 'NO'} | Chat: {'OK' if _chat_key else 'NO'}")
+    st.caption("v3.0 · 2026")
 
 
 # ===== 页面路由变量 =====
 _current = st.session_state["current_page"]
 _admin_logged = st.session_state["admin_logged_in"]
+_user_logged = st.session_state["user_logged_in"]
+_current_user = st.session_state.get("current_user")
 
-# ===== 页面 1：智能问答（公开访问）=====
-if _current == "qa":
-    st.title("💬 智能问答")
-    st.caption("基于知识库的 RAG 智能问答系统")
+# ===== 页面 0：登录/注册 =====
+if _current == "login":
+    st.title("🔐 用户登录")
+    st.caption("欢迎使用 RAG 知识库问答系统")
     st.divider()
+
+    tab_login, tab_register = st.tabs(["登录", "注册"])
+
+    with tab_login:
+        with st.form("login_form"):
+            username = st.text_input("用户名")
+            password = st.text_input("密码", type="password")
+            submitted = st.form_submit_button("登录", use_container_width=True)
+
+            if submitted:
+                if not username or not password:
+                    st.error("请输入用户名和密码")
+                else:
+                    success, message = login(username, password)
+                    if success:
+                        st.session_state["user_logged_in"] = True
+                        st.session_state["current_user"] = username
+                        st.session_state["current_page"] = "qa"
+                        # 初始化用户会话历史
+                        if "qa_messages" not in st.session_state:
+                            st.session_state["qa_messages"] = [
+                                {"role": "assistant", "content": f"欢迎来到智能客服系统，{username}！请输入您的问题。"}
+                            ]
+                        st.session_state["session_id"] = str(uuid.uuid4())[:8]
+                        st.success("登录成功，正在跳转...")
+                        st.rerun()
+                    else:
+                        st.error(message)
+
+    with tab_register:
+        with st.form("register_form"):
+            st.caption("注册后即可使用智能问答功能")
+            new_username = st.text_input("用户名")
+            new_password = st.text_input("密码", type="password")
+            confirm_password = st.text_input("确认密码", type="password")
+            submitted = st.form_submit_button("注册", use_container_width=True)
+
+            if submitted:
+                if not new_username or not new_password:
+                    st.error("请输入用户名和密码")
+                elif new_password != confirm_password:
+                    st.error("两次输入的密码不一致")
+                elif len(new_username) < 2:
+                    st.error("用户名至少2个字符")
+                else:
+                    success, message = register(new_username, new_password)
+                    if success:
+                        st.success(message)
+                        st.info("请使用新账号登录")
+                    else:
+                        st.error(message)
+
+
+# ===== 页面 1：智能问答（需登录）=====
+elif _current == "qa" and _user_logged:
+    st.title("💬 智能问答")
+    st.caption(f"当前用户: {_current_user} | 基于知识库的 RAG 智能问答系统")
+    st.divider()
+
+    # 初始化用户会话历史
+    if "qa_messages" not in st.session_state:
+        st.session_state["qa_messages"] = [
+            {"role": "assistant", "content": f"欢迎来到智能客服系统，{_current_user}！请输入您的问题。"}
+        ]
+    if "session_id" not in st.session_state:
+        st.session_state["session_id"] = str(uuid.uuid4())[:8]
 
     # 显示问答侧边栏信息
     with st.sidebar:
@@ -154,7 +215,7 @@ if _current == "qa":
 
         if st.button("🗑️ 清空对话", use_container_width=True):
             st.session_state["qa_messages"] = [
-                {"role": "assistant", "content": "欢迎来到智能客服系统，请输入您的问题。"}
+                {"role": "assistant", "content": f"对话已清空，{_current_user}！请输入您的问题。"}
             ]
             st.session_state["session_id"] = str(uuid.uuid4())[:8]
             st.toast("对话已清空", icon="🧹")
@@ -175,7 +236,8 @@ if _current == "qa":
         try:
             with st.spinner("AI 思考中..."):
                 res_stream = st.session_state["rag"].chain.stream(
-                    {"input": prompt}, get_session_config()
+                    {"input": prompt},
+                    get_session_config(_current_user)
                 )
                 st.chat_message("assistant").write_stream(
                     capture(res_stream, ai_res_list)
@@ -224,8 +286,13 @@ elif _current == "admin" and _admin_logged:
         st.caption(f"分块重叠: {config.chunk_overlap} 字符")
 
         st.divider()
+        st.subheader("👥 用户管理")
+        st.caption("用户注册后即可使用问答功能")
+        st.caption(f"知识库共享，历史独立")
+
+        st.divider()
         st.subheader("📊 本次会话上传记录")
-        if st.session_state["upload_history"]:
+        if st.session_state.get("upload_history"):
             for record in st.session_state["upload_history"]:
                 st.caption(
                     f"{record['time']} · **{record['file']}** ({record['status']})"
@@ -292,6 +359,8 @@ elif _current == "admin" and _admin_logged:
                 st.info(result)
                 upload_status = "未知"
 
+            if "upload_history" not in st.session_state:
+                st.session_state["upload_history"] = []
             st.session_state["upload_history"].append({
                 "file": file_name,
                 "status": upload_status,
