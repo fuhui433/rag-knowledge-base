@@ -104,12 +104,11 @@ with st.sidebar:
         st.session_state["current_page"] = "qa"
         st.rerun()
 
-    # 后台管理按钮（仅管理员可见）
-    if st.session_state["admin_logged_in"]:
-        admin_label = "🔒 后台管理"
-        if st.button(admin_label, use_container_width=True):
-            st.session_state["current_page"] = "admin"
-            st.rerun()
+    # 后台管理按钮（所有用户可见，但需要管理员密码）
+    admin_label = "🔒 后台管理"
+    if st.button(admin_label, use_container_width=True):
+        st.session_state["current_page"] = "admin"
+        st.rerun()
 
     st.divider()
     st.caption(f"Embed: {'OK' if _embedding_key else 'NO'} | Chat: {'OK' if _chat_key else 'NO'}")
