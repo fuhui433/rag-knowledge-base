@@ -10,10 +10,21 @@ from datetime import datetime
 
 
 # 用户数据文件路径
-USERS_FILE = os.path.join(os.path.dirname(__file__), "..", "data", "users.json")
+# Streamlit Cloud 使用 /mount/ 目录持久化存储
+# 本地开发使用项目目录下的 data/
+def _get_data_dir():
+    """获取数据目录（Cloud 用 /mount/data，本地用 data/）"""
+    cloud_data_dir = "/mount/data"
+    if os.path.exists(cloud_data_dir):
+        return cloud_data_dir
+    else:
+        return os.path.join(os.path.dirname(__file__), "..", "data")
+
+
+USERS_FILE = os.path.join(_get_data_dir(), "users.json")
 
 # 聊天历史存储目录
-HISTORY_DIR = os.path.join(os.path.dirname(__file__), "..", "chat_history")
+HISTORY_DIR = os.path.join(_get_data_dir(), "chat_history")
 
 
 def _hash_password(password: str, salt: str) -> tuple[str, str]:
